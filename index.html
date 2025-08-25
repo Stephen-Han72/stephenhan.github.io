@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关联检测</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+
+    body {
+      background-color: #f5f8fa;
+      color: #2c3e50;
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #3498db;
+    }
+
+    .header h1 {
+      color: #2980b9;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .form-container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(52, 152, 219, 0.1);
+      padding: 25px;
+      margin-bottom: 30px;
+      border: 1px solid #ecf0f1;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2980b9;
+    }
+
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #bdc3c7;
+      border-radius: 4px;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 100px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+
+    .btn-container {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .result-container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(52, 152, 219, 0.1);
+      padding: 25px;
+      display: none;
+      border: 1px solid #ecf0f1;
+    }
+
+    .result-title {
+      font-size: 20px;
+      color: #2980b9;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .result-content {
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .result-positive {
+      background-color: rgba(52, 152, 219, 0.1);
+      border-left: 4px solid #2980b9;
+      color: #1a5276;
+    }
+
+    .result-negative {
+      background-color: rgba(149, 165, 166, 0.1);
+      border-left: 4px solid #7f8c8d;
+      color: #5d6d7e;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 600px) {
+      body {
+        padding: 15px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .form-container, .result-container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>关联检测</h1>
+</div>
+
+<div class="form-container">
+  <form id="associationForm">
+    <div class="form-group">
+      <label for="pirna">piRNA</label>
+      <textarea id="pirna" name="pirna"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="drug">Drug</label>
+      <textarea id="drug" name="drug"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="sideEffect">Side Effect</label>
+      <textarea id="sideEffect" name="sideEffect"></textarea>
+    </div>
+
+    <div class="btn-container">
+      <button type="submit">Submit</button>
+    </div>
+  </form>
+</div>
+
+<div class="result-container" id="resultContainer">
+  <h2 class="result-title">Results</h2>
+  <div class="result-content" id="resultContent"></div>
+</div>
+
+<script>
+  // 获取DOM元素
+  const form = document.getElementById('associationForm');
+  const resultContainer = document.getElementById('resultContainer');
+  const resultContent = document.getElementById('resultContent');
+
+  // 表单提交事件处理
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // 获取用户输入的元组数据
+    const pirna = document.getElementById('pirna').value.trim();
+    const drug = document.getElementById('drug').value.trim();
+    const sideEffect = document.getElementById('sideEffect').value.trim();
+
+    // 检查是否为空
+    if (!pirna || !drug || !sideEffect) {
+      showResult('PLEASE  ENTER  DATA', 'result-negative');
+      return;
+    }
+
+    // 将输入转换为数组（按行分割）
+    const pirnaArray = pirna.split('\n').map(item => item.trim()).filter(item => item);
+    const drugArray = drug.split('\n').map(item => item.trim()).filter(item => item);
+    const sideEffectArray = sideEffect.split('\n').map(item => item.trim()).filter(item => item);
+
+    // 这里是简化的关联检测逻辑，实际应用中可以替换为更复杂的算法
+    const hasAssociation = checkAssociation(pirnaArray, drugArray, sideEffectArray);
+
+    // 显示检测结果
+    if (hasAssociation) {
+      showResult('检测到 piRNA、drug 和 side effect 之间存在关联', 'result-positive');
+    } else {
+      showResult('未检测到 piRNA、drug 和 side effect 之间存在明显关联', 'result-negative');
+    }
+  });
+
+  // 关联检测函数（简化示例）
+  function checkAssociation(pirna, drug, sideEffect) {
+    // 这里使用简单的规则来模拟关联检测
+
+    // 规则1：如果任意元组元素数量少于2个，认为关联可能性低
+    if (pirna.length < 2 || drug.length < 2 || sideEffect.length < 2) {
+      return false;
+    }
+
+    // 规则2：模拟基于某些关键词的关联检测
+    const keywords = ['癌症', '肿瘤', '治疗', '抑制', '表达'];
+    const combinedData = [...pirna, ...drug, ...sideEffect].join(' ').toLowerCase();
+
+    // 检查是否包含任何关键词
+    const hasKeyword = keywords.some(keyword => combinedData.includes(keyword.toLowerCase()));
+
+    // 规则3：模拟基于元素数量的简单关联判断
+    const totalElements = pirna.length + drug.length + sideEffect.length;
+    const associationThreshold = 8; // 阈值可调整
+
+    // 综合判断是否存在关联
+    return hasKeyword && totalElements >= associationThreshold;
+  }
+
+  // 显示结果的函数
+  function showResult(message, resultClass) {
+    resultContent.textContent = message;
+    resultContent.className = `result-content ${resultClass}`;
+    resultContainer.style.display = 'block';
+
+    //滚动页面
+    resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+</body>
+</html>
